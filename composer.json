@@ -1,5 +1,5 @@
 {
-    "name": "flaviozantut/remote-config-client-php",
+    "name": "linx/remote-config-client-php",
     "description": "Client for remote config",
     "type": "library",
     "license": "MIT",
@@ -10,14 +10,16 @@
         }
     ],
     "require": {
-        "guzzlehttp/guzzle": "~6.0"
+        "php": ">=7.0",
+        "guzzlehttp/guzzle": "~6.0",
+        "illuminate/support": "~5.4"
     },
     "require-dev": {
         "phpunit/phpunit": "~5.7"
     },
     "autoload": {
         "psr-4": {
-            "Flaviozantut\\RemoteConfig\\": "src/"
+            "Linx\\RemoteConfigClient\\": "src/"
         }
     }
 

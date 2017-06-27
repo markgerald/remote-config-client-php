@@ -1,32 +1,45 @@
 <?php
 
-namespace Flaviozantut\RemoteConfig;
+namespace Linx\RemoteConfigClient;
 
 use GuzzleHttp\Client;
 
+
 class RemoteConfig
 {
-    private $domain;
+    private $host;
 
-    private $authToken;
+    private $username;
 
-    private $client;
+    private $password;
 
-    public function __construct($domain, $authToken)
+    private $application;
+
+    private $environment;
+
+    public function __construct(array $credentials)
     {
-        $this->domain = $domain;
-        $this->authToken = $authToken;
+        $this->host = $credentials['host'];
+        $this->username = $credentials['username'];
+        $this->password = $credentials['password'];
+        $this->application = $credentials['application'];
+        $this->environment = $credentials['environment'];
     }
 
-    public function get($value = '')
+    public function getClientConfig(string $client, string $config = null)
     {
-        $client = new Client([
-            'base_uri' => $this->domain,
-            'timeout'  => 2.0,
+
+
+        $guzzleClient = new Client([
+            'base_uri' => $this->host
         ]);
 
-        $response = $client->request('GET', 'v1/config?auth_token=' . $this->authToken);
+        $uri = "api/v1/configs/{$this->application}/{$client}/{$this->environment}";
 
-        return json_decode($response->getBody(), true);
+        $response = $guzzleClient->request('GET', $uri, ['auth' => [$this->username, $this->password]]);
+
+        $data = json_decode($response->getBody(), true);
+
+        return array_get($data, $config, null);
     }
 }
