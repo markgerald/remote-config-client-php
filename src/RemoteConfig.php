@@ -3,7 +3,7 @@
 namespace Linx\RemoteConfigClient;
 
 use GuzzleHttp\Client;
-
+use Symfony\Component\Cache\Simple\FilesystemCache;
 
 class RemoteConfig
 {
@@ -17,6 +17,12 @@ class RemoteConfig
 
     private $environment;
 
+    private $cacheLifeTime;
+
+    private $httpClient;
+
+    private $cache;
+
     public function __construct(array $credentials)
     {
         $this->host = $credentials['host'];
@@ -24,22 +30,64 @@ class RemoteConfig
         $this->password = $credentials['password'];
         $this->application = $credentials['application'];
         $this->environment = $credentials['environment'];
+        $this->cacheLifeTime = isset($credentials['cache-life-time']) ? $credentials['cache-life-time'] : 3600;
+        $this->cacheDirectory = isset($credentials['cache-directory']) ? $credentials['cache-directory'] : null;
     }
 
     public function getClientConfig(string $client, string $config = null)
     {
-
-
-        $guzzleClient = new Client([
-            'base_uri' => $this->host
-        ]);
-
         $uri = "api/v1/configs/{$this->application}/{$client}/{$this->environment}";
 
-        $response = $guzzleClient->request('GET', $uri, ['auth' => [$this->username, $this->password]]);
+        $cacheKey = md5($uri);
 
-        $data = json_decode($response->getBody(), true);
+        if ($this->getCache()->has($cacheKey)) {
+            $data = $this->getCache()->get($cacheKey);
+        } else {
+            $data = $this->httpGet($uri);
+            $this->getCache()->set($cacheKey, $data);
+        }
 
         return array_get($data, $config, null);
+    }
+
+    private function httpGet($path)
+    {
+        $response = $this->getHttpClient()->request('GET', $path, ['auth' => [$this->username, $this->password]]);
+
+        return json_decode($response->getBody(), true);
+    }
+
+    public function getHttpClient()
+    {
+        if (!empty($this->httpClient)) {
+            return $this->httpClient;
+        }
+
+        $httpClient = new Client([
+            'base_uri' => $this->host,
+        ]);
+
+        return $this->httpClient = $httpClient;
+    }
+
+    public function getCache()
+    {
+        if (!empty($this->cache)) {
+            return $this->cache;
+        }
+
+        $cache = new FilesystemCache('', $this->cacheLifeTime, $this->cacheDirectory);
+
+        return $this->cache = $cache;
+    }
+
+    public function setHttpClient(Client $httpClient)
+    {
+        $this->httpClient = $httpClient;
+    }
+
+    public function setCache(FilesystemCache $cache)
+    {
+        $this->cache = $cache;
     }
 }
