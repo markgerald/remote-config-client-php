@@ -36,7 +36,7 @@ class RemoteConfig
 
     public function getClientConfig(string $client, string $config = null)
     {
-        $uri = "api/v1/configs/{$this->application}/{$client}/{$this->environment}";
+        $uri = "/api/v1/configs/{$this->application}/{$client}/{$this->environment}";
 
         $cacheKey = md5($uri);
 
@@ -52,7 +52,7 @@ class RemoteConfig
 
     private function httpGet($path)
     {
-        $response = $this->getHttpClient()->request('GET', $path, ['auth' => [$this->username, $this->password]]);
+        $response = $this->getHttpClient()->request('GET', $this->host . $path, ['auth' => [$this->username, $this->password]]);
 
         return json_decode($response->getBody(), true);
     }
@@ -63,9 +63,7 @@ class RemoteConfig
             return $this->httpClient;
         }
 
-        $httpClient = new Client([
-            'base_uri' => $this->host,
-        ]);
+        $httpClient = new Client();
 
         return $this->httpClient = $httpClient;
     }
