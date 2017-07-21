@@ -25,7 +25,7 @@ class RemoteConfig
 
     public function __construct(array $credentials)
     {
-        $this->host = $credentials['host'];
+        $this->host = $this->addScheme($credentials['host']);
         $this->username = $credentials['username'];
         $this->password = $credentials['password'];
         $this->application = $credentials['application'];
@@ -87,5 +87,12 @@ class RemoteConfig
     public function setCache(FilesystemCache $cache)
     {
         $this->cache = $cache;
+    }
+
+    private function addScheme($url, $scheme = 'http://')
+    {
+        return parse_url($url, PHP_URL_SCHEME) === null
+        ? $scheme . $url
+        : $url;
     }
 }
