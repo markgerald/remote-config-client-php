@@ -7,6 +7,8 @@ use Symfony\Component\Cache\Simple\FilesystemCache;
 
 class RemoteConfig
 {
+    const REQUEST_TIMEOUT = 1; // seconds
+
     private $host;
 
     private $username;
@@ -52,7 +54,15 @@ class RemoteConfig
 
     private function httpGet($path)
     {
-        $response = $this->getHttpClient()->request('GET', $this->host . $path, ['auth' => [$this->username, $this->password]]);
+        $response = $this->getHttpClient()->request(
+            'GET',
+            $this->host . $path, [
+                'auth' => [ $this->username, $this->password ],
+                'connect_timeout' => self::REQUEST_TIMEOUT,
+                'read_timeout' => self::REQUEST_TIMEOUT,
+                'timeout' => self::REQUEST_TIMEOUT,
+            ]
+        );
 
         return json_decode($response->getBody(), true);
     }
