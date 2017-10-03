@@ -3,6 +3,7 @@
 namespace Linx\RemoteConfigClient;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Cache;
 
 class RemoteConfigServiceProvider extends ServiceProvider
 {
@@ -21,7 +22,10 @@ class RemoteConfigServiceProvider extends ServiceProvider
     {
         $this->app->singleton(RemoteConfig::class, function ($app) {
             $config = $app->make('config')->get('remote-config');
-            return new RemoteConfig($config);
+            $remoteConfig = new RemoteConfig($config);
+            $remoteConfig->setCache(Cache::getFacadeRoot()->store());
+
+            return $remoteConfig;
         });
     }
 }

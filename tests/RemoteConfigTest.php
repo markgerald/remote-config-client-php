@@ -29,13 +29,18 @@ class FormBuilderTest extends PHPUnit_Framework_TestCase
 
         $cacheMock
             ->shouldReceive('has')
-            ->with(md5('api/v1/configs/application/client/environment'))
+            ->with(md5('/api/v1/configs/application/client/environment'))
             ->once()
             ->andReturn(false);
 
         $httpClientMock
             ->shouldReceive('request')
-            ->with('GET', 'api/v1/configs/application/client/environment', ['auth' => ['username@email.com', 'password']])
+            ->with('GET', 'http://remote-config/api/v1/configs/application/client/environment', [
+                'auth' => ['username@email.com', 'password'],
+                'connect_timeout' => RemoteConfig::REQUEST_TIMEOUT,
+                'read_timeout' => RemoteConfig::REQUEST_TIMEOUT,
+                'timeout' => RemoteConfig::REQUEST_TIMEOUT,
+                ])
             ->once()
             ->andReturn(Mockery::self())
             ->getMock()
@@ -45,7 +50,7 @@ class FormBuilderTest extends PHPUnit_Framework_TestCase
 
         $cacheMock
             ->shouldReceive('set')
-            ->with(md5('api/v1/configs/application/client/environment'), [])
+            ->with(md5('/api/v1/configs/application/client/environment'), [], 3600)
             ->once()
             ->andReturn(true);
 
