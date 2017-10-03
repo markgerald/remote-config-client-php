@@ -4,6 +4,7 @@ namespace Linx\RemoteConfigClient;
 
 use GuzzleHttp\Client;
 use Symfony\Component\Cache\Simple\FilesystemCache;
+use Psr\SimpleCache\CacheInterface;
 
 class RemoteConfig
 {
@@ -46,7 +47,7 @@ class RemoteConfig
             $data = $this->getCache()->get($cacheKey);
         } else {
             $data = $this->httpGet($uri);
-            $this->getCache()->set($cacheKey, $data);
+            $this->getCache()->set($cacheKey, $data, $this->cacheLifeTime);
         }
 
         return array_get($data, $config, null);
@@ -94,7 +95,7 @@ class RemoteConfig
         $this->httpClient = $httpClient;
     }
 
-    public function setCache(FilesystemCache $cache)
+    public function setCache(CacheInterface $cache)
     {
         $this->cache = $cache;
     }
