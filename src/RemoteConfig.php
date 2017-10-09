@@ -8,7 +8,7 @@ use Psr\SimpleCache\CacheInterface;
 
 class RemoteConfig
 {
-    const REQUEST_TIMEOUT = 1; // seconds
+    const REQUEST_TIMEOUT = 3; // seconds
 
     private $host;
 
@@ -40,17 +40,23 @@ class RemoteConfig
     public function getClientConfig(string $client, string $config = null)
     {
         $uri = "/api/v1/configs/{$this->application}/{$client}/{$this->environment}";
-
         $cacheKey = md5($uri);
 
-        if ($this->getCache()->has($cacheKey)) {
-            $data = $this->getCache()->get($cacheKey);
+        $cache = $this->getCache()->tags($this->getCacheTags($client));
+
+        if ($cache->has($cacheKey)) {
+            $data = $cache->get($cacheKey);
         } else {
             $data = $this->httpGet($uri);
-            $this->getCache()->set($cacheKey, $data, $this->cacheLifeTime);
+            $cache->set($cacheKey, $data, $this->cacheLifeTime);
         }
 
         return array_get($data, $config, null);
+    }
+
+    private function getCacheTags($client)
+    {
+        return [ $client, "{$client}-remoteconfig" ];
     }
 
     private function httpGet($path)
