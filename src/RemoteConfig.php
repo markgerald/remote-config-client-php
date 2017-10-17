@@ -5,6 +5,8 @@ namespace Linx\RemoteConfigClient;
 use GuzzleHttp\Client;
 use Symfony\Component\Cache\Simple\FilesystemCache;
 use Psr\SimpleCache\CacheInterface;
+use GuzzleHttp\Exception\ConnectException;
+use Exception;
 
 class RemoteConfig
 {
@@ -47,7 +49,11 @@ class RemoteConfig
         if ($cache->has($cacheKey)) {
             $data = $cache->get($cacheKey);
         } else {
-            $data = $this->httpGet($uri);
+            try {
+                $data = $this->httpGet($uri);
+            } catch (ConnectException $e) {
+                 throw new \Exception("Connection error on: '{$this->host}{$uri}'. \n {$e->getMessage()}");
+            }
             $cache->set($cacheKey, $data, $this->cacheLifeTime);
         }
 

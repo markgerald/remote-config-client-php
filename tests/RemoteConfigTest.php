@@ -33,6 +33,12 @@ class FormBuilderTest extends PHPUnit_Framework_TestCase
             ->once()
             ->andReturn(false);
 
+        $cacheMock
+            ->shouldReceive('tags')
+            ->with(['client', "client-remoteconfig"])
+            ->once()
+            ->andReturn($cacheMock);
+
         $httpClientMock
             ->shouldReceive('request')
             ->with('GET', 'http://remote-config/api/v1/configs/application/client/environment', [
