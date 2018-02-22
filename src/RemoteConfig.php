@@ -44,7 +44,10 @@ class RemoteConfig
         $uri = "/api/v1/configs/{$this->application}/{$client}/{$this->environment}";
         $cacheKey = md5($uri);
 
-        $cache = $this->getCache()->tags($this->getCacheTags($client));
+        $cache = $this->getCache();
+        if (method_exists($cache, 'tags')) {
+            $cache = $cache->tags($this->getCacheTags($client));
+        }
 
         if ($cache->has($cacheKey)) {
             $data = $cache->get($cacheKey);

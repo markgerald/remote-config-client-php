@@ -2,3 +2,7 @@
 /.phpintel
 
 composer.lock
+.buildpath
+.project
+.settings
+
