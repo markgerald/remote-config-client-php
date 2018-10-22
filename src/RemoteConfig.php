@@ -28,6 +28,8 @@ class RemoteConfig
 
     private $cache;
 
+    private $cacheNamespacePattern = "remote-config:%s";
+
     public function __construct(array $credentials)
     {
         $this->host = $this->addScheme($credentials['host']);
@@ -42,7 +44,7 @@ class RemoteConfig
     public function getClientConfig(string $client, string $config = null)
     {
         $uri = "/api/v1/configs/{$this->application}/{$client}/{$this->environment}";
-        $cacheKey = "remote-config:{$client}";
+        $cacheKey = printf($this->cacheNamespacePattern, $client);
 
         $cache = $this->getCache();
         if (method_exists($cache, 'tags')) {
@@ -113,6 +115,11 @@ class RemoteConfig
     public function setCache(CacheInterface $cache)
     {
         $this->cache = $cache;
+    }
+
+    public function setCacheNamespacePattern(string $namespacePattern)
+    {
+        $this->cacheNamespacePattern = $namespacePattern;
     }
 
     private function addScheme($url, $scheme = 'http://')
