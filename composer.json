@@ -3,7 +3,7 @@
     "description": "Client for remote config",
     "type": "library",
     "license": "MIT",
-    "version": "0.1.1",
+    "version": "custom_cache_namespace",
     "authors": [
         {
             "name": "flaviozantut",
