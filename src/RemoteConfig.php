@@ -44,7 +44,7 @@ class RemoteConfig
     public function getClientConfig(string $client, string $config = null)
     {
         $uri = "/api/v1/configs/{$this->application}/{$client}/{$this->environment}";
-        $cacheKey = printf($this->cacheNamespacePattern, $client);
+        $cacheKey = sprintf($this->cacheNamespacePattern, $client);
 
         $cache = $this->getCache();
         if (method_exists($cache, 'tags')) {
