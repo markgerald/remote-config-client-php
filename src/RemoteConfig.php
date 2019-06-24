@@ -6,11 +6,12 @@ use GuzzleHttp\Client;
 use Symfony\Component\Cache\Simple\FilesystemCache;
 use Psr\SimpleCache\CacheInterface;
 use GuzzleHttp\Exception\ConnectException;
-use Exception;
 
 class RemoteConfig
 {
     const REQUEST_TIMEOUT = 3; // seconds
+
+    const REQUEST_URI = '/api/v1/configs/%s/%s/%s';
 
     private $host;
 
@@ -41,8 +42,8 @@ class RemoteConfig
 
     public function getClientConfig(string $client, string $config = null)
     {
-        $uri = "/api/v1/configs/{$this->application}/{$client}/{$this->environment}";
-        $cacheKey = md5($uri);
+        $uri = $this->buildUri($this->application, $client, $this->environment);
+        $cacheKey = $this->buildCacheKey($uri);
 
         $cache = $this->getCache();
         if (method_exists($cache, 'tags')) {
@@ -55,7 +56,7 @@ class RemoteConfig
             try {
                 $data = $this->httpGet($uri);
             } catch (ConnectException $e) {
-                 throw new \Exception("Connection error on: '{$this->host}{$uri}'. \n {$e->getMessage()}");
+                throw new \Exception("Connection error on: '{$this->host}{$uri}'. \n {$e->getMessage()}");
             }
             $cache->set($cacheKey, $data, $this->cacheLifeTime);
         }
@@ -65,15 +66,16 @@ class RemoteConfig
 
     private function getCacheTags($client)
     {
-        return [ $client, "{$client}-remoteconfig" ];
+        return [$client, "{$client}-remoteconfig"];
     }
 
     private function httpGet($path)
     {
         $response = $this->getHttpClient()->request(
             'GET',
-            $this->host . $path, [
-                'auth' => [ $this->username, $this->password ],
+            $this->host . $path,
+            [
+                'auth' => [$this->username, $this->password],
                 'connect_timeout' => self::REQUEST_TIMEOUT,
                 'read_timeout' => self::REQUEST_TIMEOUT,
                 'timeout' => self::REQUEST_TIMEOUT,
@@ -115,10 +117,43 @@ class RemoteConfig
         $this->cache = $cache;
     }
 
+    public function updateCacheData(string $client, array $data, bool $canExpire = true)
+    {
+        $uri = $this->buildUri($this->application, $client, $this->environment);
+        $cacheKey = $this->buildCacheKey($uri);
+
+        $cache = $this->getCache();
+        if (method_exists($cache, 'tags')) {
+            $cache = $cache->tags($this->getCacheTags($client));
+        }
+
+        $cacheLifeTime = $canExpire ? $this->cacheLifeTime : null;
+
+        $cache->set($cacheKey, $data, $cacheLifeTime);
+    }
+
     private function addScheme($url, $scheme = 'http://')
     {
         return parse_url($url, PHP_URL_SCHEME) === null
-        ? $scheme . $url
-        : $url;
+            ? $scheme . $url
+            : $url;
+    }
+
+    private function buildUri(
+        string $application,
+        string $client,
+        string $environment
+    ): string {
+        return sprintf(
+            self::REQUEST_URI,
+            $application,
+            $client,
+            $environment
+        );
+    }
+
+    private function buildCacheKey(string $uri): string
+    {
+        return md5($uri);
     }
 }
