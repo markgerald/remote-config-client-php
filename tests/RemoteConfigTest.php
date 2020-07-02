@@ -4,7 +4,7 @@ use Linx\RemoteConfigClient\RemoteConfig;
 use GuzzleHttp\Client;
 use Symfony\Component\Cache\Simple\FilesystemCache;
 
-class FormBuilderTest extends PHPUnit_Framework_TestCase
+class RemoteConfigTest extends PHPUnit_Framework_TestCase
 {
     public function tearDown()
     {
@@ -33,12 +33,6 @@ class FormBuilderTest extends PHPUnit_Framework_TestCase
             ->once()
             ->andReturn(false);
 
-        $cacheMock
-            ->shouldReceive('tags')
-            ->with(['client', "client-remoteconfig"])
-            ->once()
-            ->andReturn($cacheMock);
-
         $httpClientMock
             ->shouldReceive('request')
             ->with('GET', 'http://remote-config/api/v1/configs/application/client/environment', [
@@ -48,15 +42,15 @@ class FormBuilderTest extends PHPUnit_Framework_TestCase
                 'timeout' => RemoteConfig::REQUEST_TIMEOUT,
                 ])
             ->once()
-            ->andReturn(Mockery::self())
+            ->andReturnSelf()
             ->getMock()
             ->shouldReceive('getBody')
             ->once()
-            ->andReturn('{}');
+            ->andReturn('{"key": "value"}');
 
         $cacheMock
             ->shouldReceive('set')
-            ->with(md5('/api/v1/configs/application/client/environment'), [], 3600)
+            ->with(md5('/api/v1/configs/application/client/environment'), ['key' => 'value'], -1)
             ->once()
             ->andReturn(true);
 
