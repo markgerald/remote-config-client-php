@@ -43,9 +43,9 @@ class RemoteConfig
         $this->password = $credentials['password'];
         $this->application = $credentials['application'];
         $this->environment = $credentials['environment'];
-        $this->cacheLifeTime = isset($credentials['cache-life-time']) ? $credentials['cache-life-time'] : self::CACHE_TTL;
-        $this->cacheDirectory = isset($credentials['cache-directory']) ? $credentials['cache-directory'] : null;
-        $this->cacheFallbackDirectory = isset($credentials['cache-fallback-directory']) ? $credentials['cache-fallback-directory'] : null;
+        $this->cacheLifeTime = $credentials['cache-life-time'] ?? self::CACHE_TTL;
+        $this->cacheDirectory = $credentials['cache-directory'] ?? null;
+        $this->cacheFallbackDirectory = $credentials['cache-fallback-directory'] ?? null;
     }
 
     public function getClientConfig(string $client, string $config = null)
