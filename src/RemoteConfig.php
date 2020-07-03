@@ -52,13 +52,19 @@ class RemoteConfig
     {
         $uri = $this->buildUri($this->application, $client, $this->environment);
         $cacheKey = $this->buildCacheKey($uri);
-
         $cache = $this->getCache();
-        if (method_exists($cache, 'tags')) {
-            $cache = $cache->tags($this->getCacheTags($client));
-        }
+        $hasCache = false;
+        $canAcessRedis = false;
 
-        if ($cache->has($cacheKey)) {
+        try {
+            if (method_exists($cache, 'tags')) {
+                $cache = $cache->tags($this->getCacheTags($client));
+            }
+            $hasCache = $cache->has($cacheKey);
+            $canAcessRedis = true;
+        } catch (\Exception $th) {}
+
+        if ($hasCache) {
             $data = $cache->get($cacheKey);
 
             if(!$this->cacheFallback()->has($cacheKey)) {
@@ -66,7 +72,9 @@ class RemoteConfig
             }
         } else {
             $data = $this->httpGet($uri);
-            $cache->set($cacheKey, $data, $this->cacheLifeTime);
+            if($canAcessRedis) {
+                $cache->set($cacheKey, $data, $this->cacheLifeTime);
+            }
         }
 
         return Arr::get($data, $config, null);
